@@ -86,6 +86,17 @@ HoneywellScanner.offBarcodeReadSuccess();
 HoneywellScanner.offBarcodeReadFail();
 ```
 
+Soft Trigger handling via Scan button
+```js
+HoneywellScanner.softwareTriggerStart((error, name) => {
+      setApiErrorMessage(error != null ? error : name);
+    });
+setTimeout(() => {
+      HoneywellScanner.softwareTriggerStop((error, name) => {
+        setApiErrorMessage(error != null ? error : name);
+      });
+}, 2000);
+```
 
 ## Build
 
