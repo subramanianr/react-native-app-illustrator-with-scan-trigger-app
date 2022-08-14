@@ -10,7 +10,7 @@
 import React, {useEffect, useState} from 'react';
 import HoneywellScanner from 'react-native-honeywell-scanner-trigger';
 import type {Node} from 'react';
-import {StyleSheet, Text, View, Pressable, FlatList, Alert} from 'react-native';
+import {StyleSheet, Text, View, Pressable, FlatList} from 'react-native';
 
 const App: () => Node = () => {
   const [apiError, setApiError] = useState(false);
@@ -38,7 +38,14 @@ const App: () => Node = () => {
             'Barcode read success ' + event.propogated + ' ' + event.all,
           );
           // eslint-disable-next-line no-shadow
-          setScans(scans => [{data: event.data, decoder: ''}, ...scans]);
+          setScans(scans => [
+            {
+              data: event.data,
+              decoder: event.symbology,
+              timeStamp: event.timeStamp,
+            },
+            ...scans,
+          ]);
         });
 
         HoneywellScanner.onBarcodeReadFail(event => {
@@ -108,7 +115,7 @@ const App: () => Node = () => {
             {defaultLabel} {isCompatible.toString()}
           </Text>
         )}
-        renderItem={({item, separators}) => (
+        renderItem={({item}) => (
           <View
             style={{
               backgroundColor: '#0077A0',
@@ -119,6 +126,7 @@ const App: () => Node = () => {
             }}>
             <Text style={styles.scanDataHead}>{item.decoder}</Text>
             <Text style={styles.scanData}>{item.data}</Text>
+            <Text style={styles.scanDataHead}>{item.timeStamp}</Text>
           </View>
         )}
       />
@@ -242,6 +250,16 @@ const styles = StyleSheet.create({
 
     margin: 2,
     color: 'black',
+  },
+  inputLabels: {
+    fontSize: 16,
+  },
+  input: {
+    height: 56,
+    marginTop: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderRadius: 3,
   },
 });
 
