@@ -33,9 +33,9 @@ const App: () => Node = () => {
             : 'Barcode reader is busy',
         );
         HoneywellScanner.onBarcodeReadSuccess(event => {
-          console.log('Received data', event.propogated);
+          console.log('Received data', event.data);
           setApiErrorMessage(
-            'Barcode read success ' + event.propogated + ' ' + event.all,
+            'Barcode read success ' + event.data + ' ' + event.all,
           );
           // eslint-disable-next-line no-shadow
           setScans(scans => [
@@ -70,7 +70,13 @@ const App: () => Node = () => {
   }, [isCompatible]);
 
   function _onPressClearScanButton() {
-    scans.splice(0, scans.length);
+    console.log('Inside Clear Scan Button call');
+    /* let arr = scans.filter(function () {
+          return false;
+       });
+       setScans(arr);
+       scans.splice(0, scans.length);*/
+    setScans([]);
   }
 
   function _onPressScanButton() {
@@ -109,7 +115,7 @@ const App: () => Node = () => {
 
       <FlatList
         data={scans}
-        keyExtractor={item => item.data}
+        keyExtractor={item => item.timeStamp}
         ListEmptyComponent={() => (
           <Text style={styles.itemText}>
             {defaultLabel} {isCompatible.toString()}
