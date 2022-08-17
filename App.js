@@ -7,20 +7,57 @@
  * @flow strict-local
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import HoneywellScanner from 'react-native-honeywell-scanner-trigger';
 import type {Node} from 'react';
-import {StyleSheet, Text, View, Pressable, FlatList} from 'react-native';
+import {StyleSheet, Text, View, Pressable, FlatList, Alert} from 'react-native';
 
 const App: () => Node = () => {
-  const [apiError, setApiError] = useState(false);
-  const [apiErrorMessage, setApiErrorMessage] = useState('');
+  const [apiError, setApiError] = React.useState(false);
+  const [apiErrorMessage, setApiErrorMessage] = React.useState('');
   const [scans, setScans] = React.useState([]);
   let isCompatible = HoneywellScanner.isCompatible;
   const defaultLabel = 'Honeywell Compatibility Check Passed: ';
   let deviceClaimed;
 
-  console.log('Starting the App');
+  console.log('Starting the App with scan count ', scans.length);
+
+  function setDataAndIgnoreDuplicates(event) {
+    console.log('Received data', event.data);
+    console.log('Printing Existing Scanned Items');
+    scans.forEach(item => console.log(item));
+    if (scans.length >= 1) {
+      let duplicate = scans.filter(function (item) {
+        return item.data === event.data;
+      }).length;
+      if (duplicate > 0) {
+        Alert.alert('Duplicate Code detected ', event.data, [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('Cancel Pressed'),
+            style: 'cancel',
+          },
+          {text: 'OK', onPress: () => console.log('Ok Pressed')},
+        ]);
+        setApiError(true);
+        setApiErrorMessage('Detected duplicate barcode ' + event.data);
+        setTimeout(() => {
+          setApiErrorMessage('');
+          setApiError(false);
+        }, 3000);
+        return;
+      }
+    }
+    // eslint-disable-next-line no-shadow
+    setScans(scans => [
+      {
+        data: event.data,
+        decoder: event.symbology,
+        timeStamp: event.timeStamp,
+      },
+      ...scans,
+    ]);
+  }
 
   useEffect(() => {
     if (isCompatible) {
@@ -33,19 +70,7 @@ const App: () => Node = () => {
             : 'Barcode reader is busy',
         );
         HoneywellScanner.onBarcodeReadSuccess(event => {
-          console.log('Received data', event.data);
-          setApiErrorMessage(
-            'Barcode read success ' + event.data + ' ' + event.all,
-          );
-          // eslint-disable-next-line no-shadow
-          setScans(scans => [
-            {
-              data: event.data,
-              decoder: event.symbology,
-              timeStamp: event.timeStamp,
-            },
-            ...scans,
-          ]);
+          setDataAndIgnoreDuplicates(event);
         });
 
         HoneywellScanner.onBarcodeReadFail(event => {
@@ -67,26 +92,22 @@ const App: () => Node = () => {
         });
       };
     }
-  }, [isCompatible]);
+  }, [isCompatible, scans]);
 
   function _onPressClearScanButton() {
     console.log('Inside Clear Scan Button call');
-    /* let arr = scans.filter(function () {
-          return false;
-       });
-       setScans(arr);
-       scans.splice(0, scans.length);*/
     setScans([]);
+    //scans.splice(0, scans.length);
   }
 
   function _onPressScanButton() {
-    console.log('Inside Scan Button call');
+    console.log('Inside Scan Button call ', scans.length);
     HoneywellScanner.softwareTriggerStart((error, name) => {
-      setApiErrorMessage(error != null ? error : name);
+      console.log('Trigger start details ', name, ' ', error);
     });
     setTimeout(() => {
       HoneywellScanner.softwareTriggerStop((error, name) => {
-        setApiErrorMessage(error != null ? error : name);
+        console.log('Trigger stop details ', name, ' ', error);
       });
     }, 2000);
   }
