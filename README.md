@@ -71,7 +71,9 @@ To get events from the barcode scanner:
 
 ```js
 HoneywellScanner.onBarcodeReadSuccess(event => {
-    console.log('Received data', event);
+    console.log('Barcode Scan data', event.data);
+    console.log('Barcode Scan Timestamp', event.timeStamp);
+    console.log('Barcode Scan Type', event.symbology);
 });
 
 HoneywellScanner.onBarcodeReadFail(event => {
